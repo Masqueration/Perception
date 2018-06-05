@@ -11,7 +11,7 @@ def get_args():
     parser = argparse.ArgumentParser(
         description='Perception Point HW by Uri Dar')
     parser.add_argument(
-        '-p', '--path', type=str, help='Path', required=False, default='/')
+        '-p', '--path', type=str, help='Path', required=False, default='')
     args = parser.parse_args()
     return args.path
 
