@@ -9,7 +9,7 @@ from report import base, end_html, add_cell
 
 MAIL_ID = 'qa.ex@office365.ecknhhk.xyz'
 MAIL_PASS = 'ew68I7W52p*W'
-F_TIME = ('{date:%Y-%m-%dT%H:%M:%SZ}'.format(date=(datetime.now()-timedelta(days=0))))
+F_TIME = ('{date:%Y-%m-%dT%H:%M:%SZ}'.format(date=(datetime.now()-timedelta(days=1))))
 bucket_name = 'interview-exercises'
 
 def get_args():
