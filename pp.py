@@ -3,7 +3,9 @@ from office365api import Mail
 from datetime import datetime, timedelta
 import boto3
 import pickle
+import webbrowser
 from os import remove
+from report import base, end_html, add_cell
 
 MAIL_ID = 'qa.ex@office365.ecknhhk.xyz'
 MAIL_PASS = 'ew68I7W52p*W'
@@ -15,9 +17,10 @@ def get_args():
         description='Perception Point HW by Uri Dar')
     parser.add_argument(
         '-p', '--path', type=str, help='Path', required=False, default='')
-    parser.add_argument('--upload', action='store_true')
+    parser.add_argument('-u', '--upload', action='store_true')
+    parser.add_argument('-r', '--report', action='store_true')
     args = parser.parse_args()
-    return args.path, args.upload
+    return args.path, args.upload, args.report
 
 
 def retrieve_emails(mail):
@@ -54,8 +57,34 @@ def save_emails(upload, path, messages):
     else:
         save_locally(path, messages)
 
+
+def gen_report(messages, upload):
+    name = str(datetime.now()).split('.')[0].replace(':', '-')
+    html = base(name)
+    if upload:
+        html += """<th>S3 Link</th>"""
+    for message in messages:
+        html += """</tr><tr>"""
+        html += add_cell(message.data['Message']['DateTimeReceived'])
+        html += add_cell(message.data['Message']['From']['EmailAddress']['Address'])
+        html += add_cell(message.data['Message']['ToRecipients'][0]['EmailAddress']['Address'])
+        html += add_cell(message.data['Message']['Subject'])
+        if upload:
+            bucket_location = boto3.client('s3').get_bucket_location(Bucket=bucket_name)
+            curr_email = message.data['Message']['Id'] + '.pkl'
+            object_url = "https://s3-{0}.amazonaws.com/{1}/{2}".format(
+                bucket_location['LocationConstraint'], bucket_name, curr_email)
+            html += add_cell(object_url, link=True)
+    html += end_html()
+    with open('Report ' + name + '.html', 'wb') as f:
+        f.write(html)
+    return name
+
 if __name__ == '__main__':
-    path, upload = get_args() #get_args()  # retrieve args
+    path, upload, report = get_args()  # get_args()  # retrieve args
     mail = Mail(auth=(MAIL_ID, MAIL_PASS))  # initiate mail instance
     messages = retrieve_emails(mail)  # Lists emails
     save_emails(upload, path, messages)
+    if report:
+        report = gen_report(messages, upload)
+        webbrowser.open('Report ' + report + '.html')
